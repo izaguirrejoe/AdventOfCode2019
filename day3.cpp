@@ -164,7 +164,7 @@ int main(int argc, const char * argv[]) {
     vector<Movement> vm;
     for(Movement m; is >> m;)
         vm.push_back(m);
-    end_of_loop(is, '|', "Bad termination of file");
+    end_of_loop(is, '|', "Bad termination of file"); //Added a '|' character to indicate end of first wire in input.
     vector<Point> wire_1;
     wire_1.push_back(Point{0,0}); //Initialize at the origin
     for(const Movement& m: vm)
