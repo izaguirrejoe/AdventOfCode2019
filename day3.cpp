@@ -3,6 +3,7 @@
 #include <fstream>
 #include <set>
 #include <algorithm>
+#include <map>
 
 using namespace std;
 
@@ -17,6 +18,7 @@ struct Point{
         return *this;
     }
 };
+
 
 ostream& operator<<(ostream& os, const Point& p)
 {
@@ -39,6 +41,16 @@ struct Point_order{
         return a.x < b.x;
     }
 };
+
+bool operator==(const Point& a, const Point& b)
+{
+    return (a.x == b.x && a.y == b.y);
+}
+
+bool operator!=(Point& a, Point& b)
+{
+    return !(a==b);
+}
 
 
 struct Movement{
@@ -155,7 +167,7 @@ int main(int argc, const char * argv[]) {
     end_of_loop(is, '|', "Bad termination of file");
     vector<Point> wire_1;
     wire_1.push_back(Point{0,0}); //Initialize at the origin
-    for(Movement m: vm)
+    for(const Movement& m: vm)
         calc_movement(wire_1, m);
 
     //Wire 2 Movements
@@ -164,22 +176,48 @@ int main(int argc, const char * argv[]) {
         vm2.push_back(m);
     vector<Point> wire_2;
     wire_2.push_back(Point{0,0}); //Initialize at the origin
-    for(Movement m: vm2)
+    for(const Movement& m: vm2)
         calc_movement(wire_2, m);
     
+    vector<Point> wire_1_srt = wire_1; //sorted version of wire_1
+    vector<Point> wire_2_srt = wire_2; //sored version of wire_2
+    
     //Sort the two wires so that I can use STL set_intersection
-    sort(wire_1.begin(), wire_1.end(),Point_order());
-    sort(wire_2.begin(),wire_2.end(),Point_order());
+    sort(wire_1_srt.begin(), wire_1_srt.end(),Point_order());
+    sort(wire_2_srt.begin(),wire_2_srt.end(),Point_order());
     
     
     vector<Point> intersection; //The intersect of the two sets of points gives the points where the wires cross
-    set_intersection(wire_1.begin(),wire_1.end(),wire_2.begin(),wire_2.end(),back_inserter(intersection));
+    set_intersection(wire_1_srt.begin(),wire_1_srt.end(),wire_2_srt.begin(),wire_2_srt.end(),back_inserter(intersection));
     sort(intersection.begin(), intersection.end(), Manhattan_order()); //Sort the set of points according to Manhattan distance from the origin
+    intersection.erase(intersection.begin()); //(0,0) doesn't count
     
-    Point solution = intersection[1]; //Skip the first element, the origin
+    Point solution = intersection[0];
     
     cout << "The intersection point closest to the origin is " << solution << '.' << endl;
     cout << "The manhattan distance is " << manhattan_distance(solution) << '.' << endl;
+    
+    //Part B
+    map<int, Point> intersect_distance;
+    for(const Point& p: intersection)
+    {
+        //Calculate for Wire 1
+        auto it = find(wire_1.begin(),wire_1.end(),p);
+        if(it == wire_1.end()) throw runtime_error("Couldn't find the intersection point.");
+        long dist_1 = it - wire_1.begin();
+        
+        //Calculate for Wire2;
+        it = find(wire_2.begin(),wire_2.end(),p);
+        if(it == wire_2.end()) throw runtime_error("Couldn't find the intersection point.");
+        long dist_2 = it - wire_2.begin();
+        
+        long total = dist_1 + dist_2;
+        intersect_distance.insert({total, p});
+    }
+    
+    auto solution2 = *(intersect_distance.begin());
+    cout << "The closest point in terms of minimizing signal delay is " << solution2.second << " with a distance of " << solution2.first << '.' << endl;
+    
     
     return 0;
 }
