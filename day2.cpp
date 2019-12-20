@@ -22,7 +22,7 @@ int instruction_size(int OpCode)
         throw runtime_error("Cannot calculate the size of an invalid OpCode.");
     if(OpCode == add || OpCode == multiply)
         return bin_op_size;
-    return 1;
+    return -1;
 }
 
 void end_of_loop(istream& is, char term, const string& message)
